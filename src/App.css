@@ -1,0 +1,27 @@
+:root {
+  --background-color: #2B2826;
+  --background-highlight-1: #363230;
+  --background-highlight-2: #413C3A;
+  --background-highlight-3: #615956;
+  --background-lowlight: #201E1D;
+  --invalid-guess: #A7373B;
+  --half-guess: #d1b744;
+  --full-guess: #628B48;
+}
+.App {
+  background-color: var(--background-color);
+  text-align: center;
+  min-height: 100vh;
+}
+.App-header {
+  min-height: 10vh;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  font-size: 1em;
+  color: white;
+}
+.App-link {
+  color: #61dafb;
+}

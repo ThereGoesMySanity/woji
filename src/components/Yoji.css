@@ -1,0 +1,24 @@
+.yoji {
+    padding: min(1vw, 12px);
+    margin: min(0.5vw, 14px);
+    background-color: var(--background-lowlight);
+    writing-mode: vertical-rl;
+    font-size: min(8vw, 9vh);
+    display: flex;
+    align-items: center;
+    line-height: 1em;
+}
+.yoji .kanji {
+    width: 1em;
+    height: 1em;
+    padding: 0 min(0.4vw, 10px);
+}
+.yoji .kanji:first-child {
+    padding-top: min(0.4vw, 10px);
+}
+.yoji .kanji:last-child {
+    padding-bottom: min(0.4vw, 10px);
+}
+.yoji.accepted {
+    font-family: "Yuji Syuku", serif;
+}

@@ -1,0 +1,70 @@
+.Game {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+.yoji-list {
+  width: 90vw;
+  overflow-x: auto;
+  display: flex;
+  flex-direction: row-reverse;
+}
+.yoji-list .yoji:first-child {
+  margin-right: auto;
+}
+.yoji-list .yoji:last-child {
+  margin-left: auto;
+}
+
+.kanji-list {
+  max-width: 90vw;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.Game button {
+	background: none;
+	color: inherit;
+	border: none;
+	padding: 0;
+	font: inherit;
+	outline: inherit;
+}
+.Game input {
+    max-width: 80vw;
+    font-size: xx-large;
+    margin: 32px;
+    text-align: center;
+    color: white;
+    background-color: var(--background-lowlight);
+    border-radius: 8px;
+    border-color: var(--background-highlight-3);
+}
+.Game input.invalid {
+    border-color: var(--invalid-guess);
+}
+.kanjiList-kanji {
+    border: 2px;
+    padding: 4px 6px;
+    margin: 4px;
+    font-size: 24px;
+    background-color: var(--background-highlight-2);
+}
+.kanji.guessed-wrong {
+  background-color: transparent;
+}
+.guessed-wrong {
+    background-color: var(--background-lowlight);
+}
+.guessed-half-right {
+    background-color: var(--half-guess);
+}
+.guessed-right {
+    background-color: var(--full-guess);
+}
