@@ -1,15 +1,15 @@
 {
   "files": {
     "main.css": "/woji/static/css/main.078d49fb.css",
-    "main.js": "/woji/static/js/main.09d3c4ce.js",
+    "main.js": "/woji/static/js/main.5035e1c7.js",
     "static/js/787.30242927.chunk.js": "/woji/static/js/787.30242927.chunk.js",
     "index.html": "/woji/index.html",
     "main.078d49fb.css.map": "/woji/static/css/main.078d49fb.css.map",
-    "main.09d3c4ce.js.map": "/woji/static/js/main.09d3c4ce.js.map",
+    "main.5035e1c7.js.map": "/woji/static/js/main.5035e1c7.js.map",
     "787.30242927.chunk.js.map": "/woji/static/js/787.30242927.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.078d49fb.css",
-    "static/js/main.09d3c4ce.js"
+    "static/js/main.5035e1c7.js"
   ]
 }
