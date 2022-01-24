@@ -20,7 +20,7 @@ class TopByKanji {
         else [, wordList] = this.innerSet.parse(words);
         for (var word of wordList) {
             for (var k of new Set(word)) {
-                if (!(k in kanjiFreq)) kanjiFreq.set(k, 0);
+                if (!kanjiFreq.has(k)) kanjiFreq.set(k, 0);
                 kanjiFreq.set(k, kanjiFreq.get(k)+1);
             }
         }
