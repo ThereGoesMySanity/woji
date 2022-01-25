@@ -19,15 +19,26 @@ class TopByKanji {
         if (this.innerSet === null) wordList = words.map(w => w.keb);
         else [, wordList] = this.innerSet.parse(words);
         for (var word of wordList) {
-            for (var k of new Set(word)) {
+            for (let k of new Set(word)) {
                 if (!kanjiFreq.has(k)) kanjiFreq.set(k, 0);
                 kanjiFreq.set(k, kanjiFreq.get(k)+1);
             }
         }
-        kanjiFreq = [...kanjiFreq.entries()];
-        kanjiFreq.sort((a, b) => b[1] - a[1]);
-        var kanjiTop = kanjiFreq.slice(0, this.limit).map(a => a[0]);
-        return [kanjiTop, wordList.filter(y => [...y].every(c => kanjiTop.includes(c)))];
+        var max = Math.max(...kanjiFreq.values());
+        wordList = wordList.map(w => [w, [...new Set(w)].map(k => max - kanjiFreq.get(k)).reduce((a, b) => a + b)]);
+        wordList.sort((a, b) => a[1] - b[1]);
+        var kanjiTop = new Set();
+        for (let i = 0; kanjiTop.size < this.limit; i++) {
+            var remove = [...wordList[i][0]].filter(k => !kanjiTop.has(k));
+            if (remove.length > 0) remove.forEach(kanjiTop.add, kanjiTop);
+            for(let word of wordList) {
+                word[1] -= [...new Set(remove)].filter(k => word[0].includes(k))
+                        .map(k => max - kanjiFreq.get(k))
+                        .reduce((a, b) => a + b, 0);
+            }
+            wordList.sort((a, b) => a[1] - b[1]);
+        }
+        return [[...kanjiTop], wordList.filter(w => w[1] === 0).map(w => w[0])];
     }
 }
 class CommonYoji {
