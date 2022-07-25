@@ -46,23 +46,23 @@ export default class Game extends React.Component {
     }
 
     initialize() {
-        var answerRand;
+        let rand;
         if (!this.props.freeplay) {
-            answerRand = require('random-seed').create(new Date().toDateString());
+            rand = require('random-seed').create(new Date().toDateString());
         } else {
-            answerRand = require('random-seed').create();
+            rand = require('random-seed').create();
         }
         this.setState({
             guesses: [],
             currentState: GameState.Standby,
             currentInput: "",
-            currentAnswer: this.state.yojiAnswers[answerRand(this.state.yojiAnswers.length)],
+            currentAnswer: this.state.yojiAnswers[rand(this.state.yojiAnswers.length)],
             invalidAnswer: false,
         }, () => {
             var newKanji = Array.from(this.state.kanji);
             newKanji.forEach(k => k.state = GuessState.NotGuessed);
             if (this.props.easymode) {
-                var freebie = this.state.currentAnswer.charAt(Math.floor(Math.random() * 4));
+                var freebie = this.state.currentAnswer.charAt(rand(4));
                 newKanji.find(k => k.text === freebie).state = GuessState.HalfRight;
             }
             this.setState({ kanji: newKanji });
@@ -90,7 +90,7 @@ export default class Game extends React.Component {
     }
     componentDidUpdate(prevProps) {
         if (this.props.freeplay !== prevProps.freeplay || 
-            this.state.currentState === GameState.Standby && this.props.easymode !== prevProps.easymode) {
+            (this.state.currentState === GameState.Standby && this.props.easymode !== prevProps.easymode)) {
             this.initialize();
         } 
     }
