@@ -73,7 +73,7 @@ var toProcess = [];
 var allYoji = [];
 var yoji_lenient = [];
 for (var ent of obj.JMdict.entry) {
-    var words = list(ent.k_ele).filter(w => typeof w !== "undefined" && yojiRegex.test(w.keb));
+    const words = list(ent.k_ele).filter(w => typeof w !== "undefined" && yojiRegex.test(w.keb));
     var wordsNoma = words.filter(a => !words.some(b => b.keb !== a.keb && b.keb.replaceAll(nomaRegex, "$1$1") === a.keb));
     if (list(ent.sense).some(s => list(s.misc).includes("yojijukugo"))) {
         toProcess.push(...wordsNoma);
