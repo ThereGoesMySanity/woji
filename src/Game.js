@@ -36,44 +36,61 @@ export default class Game extends React.Component {
         this.initialize = this.initialize.bind(this);
     }
 
+    getGuesses() {
+        if (this.props.freeplay) return this.state.guesses;
+        else return this.props.getDaily();
+    }
+    addGuess(g) {
+        if (this.props.freeplay) this.setState({guesses: [...this.state.guesses, g]});
+        else this.props.setDaily([...this.props.getDaily(), g]);
+    }
+
     initialize() {
+        var answerRand;
+        if (!this.props.freeplay) {
+            answerRand = require('random-seed').create(new Date().toDateString());
+        } else {
+            answerRand = require('random-seed').create();
+        }
         this.setState({
             guesses: [],
             currentState: GameState.Standby,
             currentInput: "",
-            currentAnswer: this.state.yojiAnswers[Math.floor(Math.random() * this.state.yojiAnswers.length)],
+            currentAnswer: this.state.yojiAnswers[answerRand(this.state.yojiAnswers.length)],
             invalidAnswer: false,
+        }, () => {
+            var newKanji = Array.from(this.state.kanji);
+            newKanji.forEach(k => k.state = GuessState.NotGuessed);
+            if (this.props.easymode) {
+                var freebie = this.state.currentAnswer.charAt(Math.floor(Math.random() * 4));
+                newKanji.find(k => k.text === freebie).state = GuessState.HalfRight;
+            }
+            this.setState({ kanji: newKanji });
+            for (let i = 0; i < this.getGuesses().length; i++) {
+                //replay saved guesses
+                this.applyGuess(this.getGuesses()[i], i);
+            }
+            console.log(this.state.currentAnswer);
         });
-        var newKanji = Array.from(this.state.kanji);
-        newKanji.forEach(k => k.state = GuessState.NotGuessed);
-        if (this.props.easymode) {
-            var freebie = this.state.currentAnswer.charAt(Math.floor(Math.random() * 4));
-            newKanji.find(k => k.text === freebie).state = GuessState.HalfRight;
-        }
-        this.setState({ kanji: newKanji });
-        console.log(this.state.currentAnswer);
     }
 
-    componentDidMount() {
-        fetch(this.props.kanji)
-            .then(k => k.text())
-            .then(k => this.setState({kanji: k.split("\n").map(c => {return{text: c, state: GuessState.NotGuessed}})}));
-        fetch("./yoji_all.txt")
-            .then(k => k.text())
-            .then(k => this.setState({yojiAccepted: new Set(k.split("\n"))}));
-        fetch("./yoji_lenient.txt")
-            .then(k => k.text())
-            .then(k => this.setState({ yojiLenient: new Set(k.split("\n")) }));
-        fetch(this.props.yojiAnswers)
-            .then(k => k.text())
-            .then(k => {
-                var answers = k.split("\n");
-                this.setState({yojiAnswers: answers});
-                this.initialize();
-            });
+    async componentDidMount() {
+        let [kanji, yojiAccepted, yojiLenient, yojiAnswers] = await Promise.all([
+            fetch(this.props.kanji).then(k => k.text()),
+            fetch("/woji/yoji_all.txt").then(k => k.text()),
+            fetch("/woji/yoji_lenient.txt").then(k => k.text()),
+            fetch(this.props.yojiAnswers).then(k => k.text()),
+        ]);
+        this.setState({
+            kanji: kanji.split("\n").map(c => {return{text: c, state: GuessState.NotGuessed}}),
+            yojiAccepted: new Set(yojiAccepted.split("\n")),
+            yojiLenient: new Set(yojiLenient.split("\n")),
+            yojiAnswers: yojiAnswers.split("\n"),
+        }, this.initialize);
     }
     componentDidUpdate(prevProps) {
-        if (this.state.currentState === GameState.Standby && this.props.easymode !== prevProps.easymode) {
+        if (this.props.freeplay !== prevProps.freeplay || 
+            this.state.currentState === GameState.Standby && this.props.easymode !== prevProps.easymode) {
             this.initialize();
         } 
     }
@@ -132,27 +149,32 @@ export default class Game extends React.Component {
         //enter
         if (e.charCode === 13) {
             var guess = {
-                text: this.state.currentInput, 
-                accepted: this.accepted(this.state.currentInput)
+                text: this.state.currentInput,
+                accepted: this.accepted(this.state.currentInput),
             };
             if (guess.accepted != null) {
                 guess.result = this.checkWord(this.state.currentInput);
-                var newGuesses = [...this.state.guesses, guess];
-                this.setState({
-                    currentInput: "", 
-                    guesses: newGuesses,
-                    kanji: this.state.kanji.map(k => Object.assign({}, k, 
-                        {state: [...guess.text].reduce((a, b, i) => (k.text !== b || a === GuessState.Right) ? 
-                                    a : guess.result[i], k.state)})),
-                })
-                if (guess.result.every(r => r === GuessState.Right)) {
-                    this.setState({currentState: GameState.Win});
-                } else if (newGuesses.length === this.props.maxGuesses) {
-                    this.setState({currentState: GameState.Lose});
-                }
+                var guessCount = this.getGuesses().length;
+                this.addGuess(guess);
+                this.applyGuess(guess, guessCount);
             } else {
-                this.setState({invalidAnswer: true});
+                this.setState({ invalidAnswer: true });
             }
+        }
+    }
+    applyGuess(guess, guessCount) {
+        this.setState({
+            currentInput: "",
+            kanji: this.state.kanji.map(k => Object.assign({}, k,
+                {
+                    state: [...guess.text].reduce((a, b, i) => (k.text !== b || a === GuessState.Right) ?
+                        a : guess.result[i], k.state)
+                })),
+        })
+        if (guess.result.every(r => r === GuessState.Right)) {
+            this.setState({ currentState: GameState.Win });
+        } else if (guessCount + 1 === this.props.maxGuesses) {
+            this.setState({ currentState: GameState.Lose });
         }
     }
 
@@ -164,8 +186,8 @@ export default class Game extends React.Component {
         return (
             <div className='Game'>
                 <div className='yoji-list'>
-                    {this.state.guesses
-                    .concat(Array(this.props.maxGuesses - this.state.guesses.length).fill({text: "", result: Array(4).fill(""), accepted: ""}))
+                    {this.getGuesses()
+                    .concat(Array(this.props.maxGuesses - this.getGuesses().length).fill({text: "", result: Array(4).fill(""), accepted: ""}))
                     .map((g, i) =>
                         <Yoji key={i} guess={g}/>
                     )}
@@ -188,6 +210,7 @@ export default class Game extends React.Component {
                 <ResultsModal 
                     gameState={this.state.currentState}
                     answer={this.state.currentAnswer}
+                    freeplay={this.props.freeplay}
                     restart={this.initialize}/>
             </div>
         )

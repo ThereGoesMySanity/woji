@@ -36,7 +36,7 @@ export default class ResultsModal extends React.Component {
                     </div>
                 )}
                 <br/>
-                <button onClick={this.props.restart}>Restart</button>
+                <button hidden={!this.props.freeplay} onClick={this.props.restart}>Restart</button>
             </Modal>
         );
     }

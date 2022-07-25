@@ -1,44 +1,58 @@
 import React from 'react';
 import './App.css';
+import SettingsModal from './components/SettingsModal';
 import Game from './Game';
 import lists from './lists.json';
+import {useState} from 'react';
+import update from 'immutability-helper';
 
-export default class App extends React.Component {
-  constructor(props) {
-    super(props);
-    this.handleChange = this.handleChange.bind(this);
-    this.restart = this.restart.bind(this);
-    this.state = {selectValue: 0, lenient: false, easymode: false, salt: 0};
-  }
-  handleChange(e) {
-    this.setState({[e.target.id]: e.target.value});
-  }
-  restart() {
-    this.setState({salt: this.state.salt + 1});
-  }
-  render() {
+import { useLocalStorage } from './useLocalStorage';
+
+export default App;
+
+function App() {
+    const [state, setState] = useLocalStorage("state", 
+        {
+          selectValue: 0,
+          lenient: false,
+          freeplay: false,
+          easymode: false,
+          dailyHistory: {},
+        });
+    const [salt, setSalt] = useState(0);
+    const getDaily = () => {
+      var date = new Date().toDateString();
+      if (!(date in state.dailyHistory)) {
+        state.dailyHistory[date] = [];
+      }
+      return state.dailyHistory[date];
+    };
+    const setDaily = (g) => {
+      var date = new Date().toDateString();
+      setState(update(state, {dailyHistory: {$merge: {[date]: g}}}));
+    };
     return (
       <div className="App">
         <header className="App-header">
-          <select onChange={this.handleChange} id="selectValue">
-            {lists.map((l, i) =>
-              <option key={i} value={i}>{l.desc} ({l.totalKanji}字, {l.totalYoji}四字)</option>
-            )}
-          </select>
-          <div style={{margin: '20px'}}>
-            <input onChange={this.handleChange} type="checkbox" id="lenient" value={this.state.lenient}/>Lenient yojijukugo mode (any word with 4 kanji counts)<br/>
-            <input onChange={this.handleChange} type="checkbox" id="easymode" value={this.state.lenient}/>Easy(ish) Mode: 1 kanji free
-          </div>
-          <button onClick={this.restart}>Restart</button>
+            <div style={{justifySelf: 'center', alignSelf: 'center', gridColumn: '1', gridRow: '1'}}>
+              ヲ字
+            </div>
+            <div style={{display: 'flex', justifySelf: 'end', justifyContent: 'right', alignItems: 'center', gridColumn: '1', gridRow: '1'}}>
+              <button hidden={!state.freeplay} disabled={!state.freeplay} onClick={() => setSalt(salt + 1)}>Restart</button>
+              <SettingsModal lists={lists} settingsState={state} update={(s) => setState(update(state, {$merge: s}))}/>
+            </div>
         </header>
         <Game 
           maxGuesses={8}
-          key={this.state.selectValue + this.state.salt}
-          lenient={this.state.lenient}
-          easymode={this.state.easymode}
-          kanji={"./kanji_"+lists[this.state.selectValue].postfix+".txt"}
-          yojiAnswers={"./yoji_"+lists[this.state.selectValue].postfix+".txt"}/>
+          key={state.selectValue + salt}
+          lenient={state.lenient}
+          easymode={state.easymode}
+          freeplay={state.freeplay}
+          kanji={"/woji/kanji_"+lists[state.selectValue].postfix+".txt"}
+          yojiAnswers={"/woji/yoji_"+lists[state.selectValue].postfix+".txt"}
+          getDaily={getDaily}
+          setDaily={setDaily}
+        />
       </div>
     );
-  }
 }
