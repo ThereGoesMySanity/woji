@@ -17,19 +17,19 @@ function App() {
           lenient: false,
           freeplay: false,
           easymode: false,
-          dailyHistory: {},
+          dailyHistory: new Array(lists.length).fill({}),
         });
     const [salt, setSalt] = useState(0);
     const getDaily = () => {
       var date = new Date().toDateString();
-      if (!(date in state.dailyHistory)) {
-        state.dailyHistory[date] = [];
+      if (!(date in state.dailyHistory[state.selectValue])) {
+        state.dailyHistory[state.selectValue][date] = [];
       }
-      return state.dailyHistory[date];
+      return state.dailyHistory[state.selectValue][date];
     };
     const setDaily = (g) => {
       var date = new Date().toDateString();
-      setState(update(state, {dailyHistory: {$merge: {[date]: g}}}));
+      setState(update(state, {dailyHistory: {[state.selectValue]: {$merge: {[date]: g}}}}));
     };
     return (
       <div className="App">

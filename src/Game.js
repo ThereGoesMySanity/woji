@@ -5,9 +5,9 @@ import ResultsModal from "./components/ResultsModal";
 import { Yoji } from "./components/Yoji";
 
 import "./Game.css";
-import { GuessState } from "./GuessState";
+import { GuessState } from "./model/GuessState";
+import { WojiGame } from "./model/WojiGame";
 
-const nomaRegex = /(.)々/g;
 export const GameState = {
     Loading: "loading",
     Standby: "standby",
@@ -30,7 +30,6 @@ export default class Game extends React.Component {
             currentAnswer: "",
             invalidAnswer: false,
         };
-        this.checkKanji = this.checkKanji.bind(this);
         this.onSubmit = this.onSubmit.bind(this);
         this.handleChange = this.handleChange.bind(this);
         this.initialize = this.initialize.bind(this);
@@ -95,42 +94,6 @@ export default class Game extends React.Component {
         } 
     }
 
-    replaceNoma(word) {
-        return word.replaceAll(nomaRegex, "$1$1");
-    }
-
-    checkWord(word, answer = this.state.currentAnswer) {
-        if (word.length !== answer.length) return null;
-        // return [...word].map((k, i) => this.checkKanji(k, word, i, answer));
-        var states = [GuessState.Wrong, GuessState.HalfRight, GuessState.Right];
-        var ansHasNoma = answer.includes("々");
-        var ansNoma = this.replaceNoma(answer);
-        var result = new Array(4);
-        for (let i = 0; i < word.length; i++) {
-            result[i] = states[Math.max(
-                    this.checkKanji(i, word, answer), 
-                    ansHasNoma? this.checkKanji(i, word, ansNoma) : 0)];
-        }
-        return result;
-    }
-
-    checkKanji(i, word, answer = this.state.currentAnswer) {
-        // var ans = [...answer];
-        // if (ans[position] === kanji) return GuessState.Right;
-        // else if ([...word.substring(0, position)].filter(c => c === kanji).length < ans.filter(c => c === kanji).length) return GuessState.HalfRight;
-        // else if (ans.includes("々")) return this.checkKanji(kanji, word, position, this.replaceNoma(answer));
-        // else return GuessState.Wrong;
-        var kanji = word[i];
-        if (answer[i] === kanji) return 2;
-        var aCount = 0, wCount = 0;
-        for (let j = 0; j < answer.length; j++) {
-            if (answer[j] === kanji) aCount += 1;
-            if (j < i && word[j] === kanji) wCount += 1;
-        }
-        if (wCount < aCount) return 1;
-        return 0;
-    }
-
     kanjiClicked(text) {
         if (this.state.currentState === GameState.Standby || this.state.currentState === GameState.Playing)
         {
@@ -144,16 +107,16 @@ export default class Game extends React.Component {
         if (this.props.lenient && this.state.yojiLenient.has(guess)) return "lenient";
     }
 
-
     onSubmit(e) {
         //enter
         if (e.charCode === 13) {
+            var input = this.state.currentInput.trim();
             var guess = {
-                text: this.state.currentInput,
-                accepted: this.accepted(this.state.currentInput),
+                text: input,
+                accepted: this.accepted(input),
             };
             if (guess.accepted != null) {
-                guess.result = this.checkWord(this.state.currentInput);
+                guess.result = WojiGame.checkWord(input, this.state.currentAnswer);
                 var guessCount = this.getGuesses().length;
                 this.addGuess(guess);
                 this.applyGuess(guess, guessCount);

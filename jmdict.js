@@ -5,13 +5,35 @@ const nomaRegex = /(.)々/g;
 function list(obj) {
     return Array.isArray(obj)? obj : [obj];
 }
-
-class TopByKanji {
+class TopByKanjiIter {
     constructor(limit, innerSet = null) {
         this.limit = limit;
         this.desc = "Top " + this.limit + " kanji" + (innerSet !== null? ", " + innerSet.desc : "");
         this.postfix = "top"+this.limit + (innerSet !== null? innerSet.postfix : "");
         this.innerSet = innerSet;
+    }
+    parse(words) {
+        var max = [[], []];
+        for (let i = 0.5; i < 4; i += 0.25) {
+            var algo = (k, max, kanjiFreq) => Math.pow(max - kanjiFreq.get(k), i);
+            var res = new TopByKanji(this.limit, this.innerSet, algo).parse(words);
+            if (res[1].length > max[1].length) {
+                max = res;
+                var best = i;
+            }
+        }
+        this.desc += best;
+        return max;
+    }
+}
+
+class TopByKanji {
+    constructor(limit, innerSet = null, algo = (k, max, kanjiFreq) => max - kanjiFreq.get(k)) {
+        this.limit = limit;
+        this.desc = "Top " + this.limit + " kanji" + (innerSet !== null? ", " + innerSet.desc : "");
+        this.postfix = "top"+this.limit + (innerSet !== null? innerSet.postfix : "");
+        this.innerSet = innerSet;
+        this.algo = algo;
     }
     parse(words) {
         var kanjiFreq = new Map();
@@ -20,12 +42,13 @@ class TopByKanji {
         else [, wordList] = this.innerSet.parse(words);
         for (var word of wordList) {
             for (let k of new Set(word)) {
-                if (!kanjiFreq.has(k)) kanjiFreq.set(k, 0);
-                kanjiFreq.set(k, kanjiFreq.get(k)+1);
+                let count = 0;
+                if (kanjiFreq.has(k)) count = kanjiFreq.get(k);
+                kanjiFreq.set(k, count+1);
             }
         }
         var max = Math.max(...kanjiFreq.values());
-        wordList = wordList.map(w => [w, [...new Set(w)].map(k => max - kanjiFreq.get(k)).reduce((a, b) => a + b)]);
+        wordList = wordList.map(w => [w, [...new Set(w)].map(k => this.algo(k, max, kanjiFreq)).reduce((a, b) => a + b)]);
         wordList.sort((a, b) => a[1] - b[1]);
         var kanjiTop = new Set();
         for (let i = 0; kanjiTop.size < this.limit; i++) {
@@ -33,7 +56,7 @@ class TopByKanji {
             if (remove.length > 0) remove.forEach(kanjiTop.add, kanjiTop);
             for(let word of wordList) {
                 word[1] -= [...new Set(remove)].filter(k => word[0].includes(k))
-                        .map(k => max - kanjiFreq.get(k))
+                        .map(k => this.algo(k, max, kanjiFreq))
                         .reduce((a, b) => a + b, 0);
             }
             wordList.sort((a, b) => a[1] - b[1]);
@@ -41,20 +64,21 @@ class TopByKanji {
         return [[...kanjiTop], wordList.filter(w => w[1] === 0).map(w => w[0])];
     }
 }
+var yojiFreq = JSON.parse(fs.readFileSync('yoji_freq.json'));
 class CommonYoji {
     constructor(common, nf) {
         this.common = common;
-        this.nf = nf;
-        this.desc = this.common ? "All common yojijukugo" : "Common yojijukugo (nf" + this.nf + ")";
-        this.postfix = this.common? "common" : "nf"+this.nf;
+        this.nf = common? 1000 : nf;
+        this.desc = this.common ? "All common yojijukugo" : "Common yojijukugo (freq > " + this.nf + ")";
+        this.postfix = this.common? "common" : "freq"+this.nf;
     }
     parse(words) {
-        var commonYoji = [];
-        for (var word of words) {
-            if ("ke_pri" in word && (this.common || list(word.ke_pri).some(ke => ke.startsWith("nf") && Number(ke.substring(2)) <= this.nf))) {
-                commonYoji.push(word.keb);
-            }
-        }
+        var commonYoji = words.filter(word => yojiFreq[word.keb] >= this.nf).map(word => word.keb);
+        // for (var word of words) {
+            // if ("ke_pri" in word && (this.common || list(word.ke_pri).some(ke => ke.startsWith("nf") && Number(ke.substring(2)) <= this.nf))) {
+        //         commonYoji.push(word.keb);
+        //     }
+        // }
         return [[...new Set(commonYoji.flatMap(y => [...y]))], commonYoji];
     }
 }
@@ -84,11 +108,11 @@ for (var ent of obj.JMdict.entry) {
     }
 }
 var processors = [
-    new TopByKanji(200),
-    new TopByKanji(100),
-    new TopByKanji(200, new CommonYoji(true)),
-    new TopByKanji(100, new CommonYoji(true)),
-    new CommonYoji(false, 32),
+    new TopByKanjiIter(200, new CommonYoji(false, 250)),
+    new TopByKanjiIter(100, new CommonYoji(false, 250)),
+    // new TopByKanjiIter(200),
+    // new TopByKanjiIter(100),
+    new CommonYoji(false, 10000),
     new CommonYoji(true),
     new AllYoji(),
 ];

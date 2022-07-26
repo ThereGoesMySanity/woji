@@ -1,6 +1,6 @@
 {
   "name": "woji",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "homepage": "https://theregoesmysanity.github.io/woji",
   "dependencies": {
@@ -44,6 +44,7 @@
     ]
   },
   "devDependencies": {
-    "gh-pages": "^4.0.0"
+    "gh-pages": "^4.0.0",
+    "jest": "^28.1.3"
   }
 }
