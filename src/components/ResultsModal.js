@@ -32,7 +32,12 @@ export default class ResultsModal extends React.Component {
                 {this.props.gameState === GameState.Lose && (
                     <div>
                         You lose<br/>
-                        Correct answer: {this.props.answer}
+                        Correct answer:
+                        <a href={`https://jisho.org/search/${this.props.answer}`} 
+                                target="_blank"
+                                rel="noreferrer">
+                            {this.props.answer}
+                        </a>
                     </div>
                 )}
                 <br/>
