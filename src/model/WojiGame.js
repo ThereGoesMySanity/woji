@@ -1,6 +1,11 @@
 import { GuessState } from "./GuessState";
 const nomaRegex = /(.)々/g;
+const kanjiRegex = /^[々ヶ〆一-龯]$/;
 export class WojiGame {
+    static isKanji(kanji) {
+        return kanjiRegex.test(kanji);
+    }
+
     static replaceNoma(word) {
         return word.replaceAll(nomaRegex, "$1$1");
     }

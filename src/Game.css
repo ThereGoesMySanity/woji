@@ -36,10 +36,20 @@
 	font: inherit;
 	outline: inherit;
 }
+div.input {
+    margin: 3vh;
+}
+.input {
+    font-size: xx-large;
+}
+.input-kanji-list {
+    justify-content: center;
+    display: flex;
+    min-height: 0.2em;
+}
 .Game input {
     max-width: 80vw;
-    font-size: xx-large;
-    margin: 32px;
+    margin: 0.1em;
     text-align: center;
     color: white;
     background-color: var(--background-lowlight);
@@ -58,6 +68,9 @@
 }
 .kanji.guessed-wrong {
   background-color: transparent;
+}
+.inputKanji.guessed-wrong {
+  background-color: var(--invalid-guess);
 }
 .guessed-wrong {
     background-color: var(--background-lowlight);

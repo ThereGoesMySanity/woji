@@ -1,5 +1,6 @@
 import classNames from "classnames";
 import React from "react";
+import { InputKanji } from "./components/InputKanji";
 import { Kanji } from "./components/Kanji";
 import ResultsModal from "./components/ResultsModal";
 import { Yoji } from "./components/Yoji";
@@ -155,13 +156,19 @@ export default class Game extends React.Component {
                         <Yoji key={i} guess={g}/>
                     )}
                 </div>
-                <input 
-                    value={this.state.currentInput} 
-                    disabled={this.state.currentState !== GameState.Standby && this.state.currentState !== GameState.Playing}
-                    onChange={this.handleChange} 
-                    onKeyPress={this.onSubmit}
-                    className={classNames({invalid: this.state.invalidAnswer})}
-                    />
+                <div className="input">
+                    <input 
+                        value={this.state.currentInput} 
+                        disabled={this.state.currentState !== GameState.Standby && this.state.currentState !== GameState.Playing}
+                        onChange={this.handleChange} 
+                        onKeyPress={this.onSubmit}
+                        className={classNames("input", {invalid: this.state.invalidAnswer})}
+                        />
+                    <div className="input-kanji-list">
+                        {[...this.state.currentInput].filter(k => WojiGame.isKanji(k)).concat()
+                        .map((k, i) => <InputKanji key={i} kanji={this.state.kanji.find(ka => ka.text === k)}/>)}
+                    </div>
+                </div>
                 <div className='kanji-list' 
                     style={{visibility: this.state.currentState !== GameState.Lose && this.state.currentState !== GameState.Win}}>
                 {this.state.kanji.map((k, i) =>
